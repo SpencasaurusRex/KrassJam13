@@ -1,0 +1,3 @@
+[submodule "Packages/Shapes"]
+	path = Packages/Shapes
+	url = https://github.com/acegikmo/Shapes
