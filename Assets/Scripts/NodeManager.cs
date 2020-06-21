@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -37,16 +38,24 @@ public class NodeManager : MonoBehaviour
             }
             nodeLookup[node.Frequency].Add(node);
         }
+        
+        StartCoroutine(RevealNodes());
+    }
+
+    IEnumerator RevealNodes()
+    {
+        foreach (var node in nodes)
+        {
+            yield return new WaitForSeconds(1f);
+            node.Reveal();
+        }
     }
 
     bool solved;
     
     void Update()
     {
-        CheckClick();
-        
-        
-        extraSpinSpeed = Mathf.Max(0, extraSpinSpeed - Time.deltaTime * decayRate);
+        extraSpinSpeed = Mathf.Max(0, Mathf.Min(extraSpinSpeed - Time.deltaTime * decayRate, 150));
         BackgroundTransform.rotation *= Quaternion.AngleAxis((SpinSpeed + extraSpinSpeed) * Time.deltaTime, Vector3.forward);
 
         if (CheckIfSolved() && !solved)
@@ -54,13 +63,17 @@ public class NodeManager : MonoBehaviour
             solved = true;
             StartCoroutine(Success());
         }
-        
+
+        if (!solved)
+        {
+            CheckClick();
+        }
     }
 
     IEnumerator Success()
     {
+        DOTween.To(() => extraSpinSpeed, (float value) => extraSpinSpeed = value, 200, 0.8f);
         yield return new WaitForSeconds(0.8f);
-        extraSpinSpeed += 200;
         SuccessAnim.Trigger();
     }
 
@@ -128,7 +141,6 @@ public class NodeManager : MonoBehaviour
             }
         }
         
-        print(connections.FirstOrDefault(c => c.HasActiveSignals()));
         return solved && !connections.Any(c => c.HasActiveSignals());
     }
 }

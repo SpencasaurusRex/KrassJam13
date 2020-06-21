@@ -325,8 +325,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4282006074
-  m_fontColor: {r: 0.2264151, g: 0.2264151, b: 0.2264151, a: 1}
+    rgba: 3815994
+  m_fontColor: {r: 0.2264151, g: 0.2264151, b: 0.2264151, a: 0}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -580,9 +580,14 @@ MonoBehaviour:
   SoundWave: {fileID: 6444650954589066882}
   DiscBody: {fileID: 9009277363049522886}
   DiscRim: {fileID: 4530340450218158027}
+  HighPop: {fileID: 8300000, guid: c61d0fcfc4b53f64db136ab2e8d54947, type: 3}
+  LowPop: {fileID: 8300000, guid: 81d9fc6c2a62d0245844cbe1fd03be6a, type: 3}
   PositiveColor: {r: 0, g: 0.6509804, b: 1, a: 1}
   NeutralColor: {r: 0.22745098, g: 0.22745098, b: 0.22745098, a: 1}
   NegativeColor: {r: 1, g: 0.05882353, b: 0.050980393, a: 1}
+  SoundWaveColor: {r: 0, g: 0.8784314, b: 1, a: 0.84313726}
+  StartingRadius: 0.8
+  PopAnimLength: 0.3
   SmoothTime: 0.1
   RadiusAnimationLength: 0.2
   RadiusAnimationAmount: 0.1
@@ -621,7 +626,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_PlayOnAwake: 1
+  m_PlayOnAwake: 0
   m_Volume: 0.2
   m_Pitch: 1
   Loop: 0
@@ -752,7 +757,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blendMode: 1
-  color: {r: 0, g: 0.879385, b: 1, a: 0.84313726}
+  color: {r: 0, g: 0.879385, b: 1, a: 0}
   polyPoints:
   - point: {x: 0, y: 0, z: 0}
     color: {r: 1, g: 1, b: 1, a: 1}

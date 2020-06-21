@@ -1,12 +1,17 @@
-﻿using DG.Tweening;
+﻿using System.Collections;
+using System.Collections.Generic;
+using DG.Tweening;
 using Shapes;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Success : MonoBehaviour
 {
     [Required]
     public Disc Rim;
+    public Color EndColorInner;
+    public Color EndColorOuter;
     
     Disc disc;
     void Start()
@@ -29,6 +34,16 @@ public class Success : MonoBehaviour
     void Expand()
     {
         DOTween.To(() => disc.Radius, (float value) => disc.Radius = Rim.Radius = value,
-            20, 1.5f).SetEase(Ease.InCubic);
+            15, 1.5f).SetEase(Ease.InCubic).OnComplete(() => StartCoroutine(NextScene()));
+        DOTween.To(() => disc.ColorInner, (Color value) => disc.ColorInner = value,
+            EndColorInner, 1.0f).SetEase(Ease.InCubic);
+        DOTween.To(() => disc.ColorOuter, (Color value) => disc.ColorOuter = value,
+            EndColorOuter, 1.0f).SetEase(Ease.InCubic);
+    }
+
+    IEnumerator NextScene()
+    {
+        yield return new WaitForSeconds(0.5f);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
 }

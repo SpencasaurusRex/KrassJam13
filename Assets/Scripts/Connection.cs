@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using DG.Tweening;
 using Shapes;
 using UnityEngine;
 
@@ -10,9 +11,7 @@ public class Connection : MonoBehaviour
     public Signal SignalPrefab;
     public float CenterSize;
     
-    public Color NegativeColor;
     public Color NeutralColor;
-    public Color PositiveColor;
     
     Polyline polyline;
     
@@ -24,27 +23,36 @@ public class Connection : MonoBehaviour
         B.AddConnection(this);
         
         polyline = GetComponent<Polyline>();
-        
+        var c = polyline.Color;
+        c.a = 0;
+        polyline.Color = c;
     }
 
     void DrawPoints()
     {
         const int Resolution = 100;
         List<Vector2> points = new List<Vector2>();
-        List<Color> colors = new List<Color>();
 
         for (float i = 0; i < Resolution; i++)
         {
             float t = i / Resolution;
             points.Add(Vector3.Lerp(A.transform.position, B.transform.position, t));
-            colors.Add(NeutralColor);
         }
 
-        polyline.SetPoints(points, colors);
+        polyline.SetPoints(points);
     }
 
+    bool shown;
+    
     void Update()
     {
+        if (!shown && A.StartRevealing && B.StartRevealing)
+        {
+            shown = true;
+            DOTween.ToAlpha(() => polyline.Color, value => polyline.Color = value, 1f, 0.3f)
+                .SetEase(Ease.OutCubic);
+        }
+
         DrawPoints();
     }
 

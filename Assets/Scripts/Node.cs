@@ -21,16 +21,22 @@ public class Node : MonoBehaviour
 
     [Required] public Polyline SoundWave;
     
-    float startingRadius;
     [Required]
     public Disc DiscBody;
     [Required]
     public Disc DiscRim;
 
+    public AudioClip HighPop;
+    public AudioClip LowPop;
+
     public Color PositiveColor;
     public Color NeutralColor;
     public Color NegativeColor;
 
+    public Color SoundWaveColor;
+    
+    public float StartingRadius = .8f;
+    
     AudioSource audio;
     float targetVolume;
     List<Connection> connections = new List<Connection>();
@@ -40,11 +46,46 @@ public class Node : MonoBehaviour
         audio = GetComponent<AudioSource>();
         audio.clip = FrequencyClips[Frequency - 1];
         audio.loop = true;
+        audio.volume = 0;
         
         Text.text = Mathf.Abs(Amplitude).ToString();
-        Text.color = GetColor(Amplitude);
+
+        DiscBody.enabled = false;
+        DiscRim.enabled = false;
+        DiscBody.Radius = 0;
+        DiscRim.Radius = 0;
+    }
+
+    public float PopAnimLength = 0.3f;
+    public float SoundWaveAnimLength = 0.2f;
+    
+    bool chaseVolume;
+    bool chaseAmplitude;
+    public bool StartRevealing;
+    
+    public void Reveal()
+    {
+        DiscBody.enabled = true;
+        DiscRim.enabled = true;
         
-        startingRadius = DiscBody.Radius;
+        Factory.Instance.OneShotSound(Vector3.zero, HighPop, 0.5f);
+        StartRevealing = true;
+        DOTween.Sequence().Append(
+            DOTween.To(() => DiscBody.Radius, (float value) => DiscRim.Radius = DiscBody.Radius = value, 
+                StartingRadius, PopAnimLength)
+                .SetEase(Ease.OutBack)
+                .OnComplete(() => { audio.Play(); chaseVolume = true;})
+        ).Append(
+            DOTween.To(() => SoundWave.Color, (Color value) => SoundWave.Color = value, 
+                SoundWaveColor, SoundWaveAnimLength)
+                .SetEase(Ease.OutCubic)
+                .OnComplete(() => { Revealed = true; chaseAmplitude = true; })
+        )
+        .Append(
+            DOTween.To(() => Text.color, (Color value) => Text.color = value, 
+                    GetColor(Amplitude), SoundWaveAnimLength)
+                .SetEase(Ease.OutCubic)
+        );
     }
 
     void DrawPoints()
@@ -87,14 +128,19 @@ public class Node : MonoBehaviour
     
     float volumeVel;
     
+    public bool Revealed;
+
     void Update()
     {
-        SmoothAmplitude = Mathf.SmoothDamp(SmoothAmplitude, Amplitude, ref ampVel, SmoothTime);
-        DiscBody.Radius = startingRadius + radiusOffset;
-        DiscRim.Radius = startingRadius + radiusOffset;
         DrawPoints();
+        if (chaseVolume)
+            audio.volume = Mathf.SmoothDamp(audio.volume, targetVolume, ref volumeVel, 0.2f);
+        if (chaseAmplitude)
+            SmoothAmplitude = Mathf.SmoothDamp(SmoothAmplitude, Amplitude, ref ampVel, Revealed ? SmoothTime : SmoothTime * 8);
+        if (!Revealed) return;
         
-        audio.volume = Mathf.SmoothDamp(audio.volume, targetVolume, ref volumeVel, 0.2f); 
+        DiscBody.Radius = StartingRadius + radiusOffset;
+        DiscRim.Radius = StartingRadius + radiusOffset;
     }
 
     public void AddConnection(Connection con)
@@ -108,6 +154,7 @@ public class Node : MonoBehaviour
         {
             con.Send(this);
         }
+        Factory.Instance.OneShotSound(Vector3.zero, HighPop, 0.5f);
     }
 
     public void RequestAbsorbAmplitude()
@@ -116,6 +163,7 @@ public class Node : MonoBehaviour
         {
             con.Absorb(this);
         }
+        Factory.Instance.OneShotSound(Vector3.zero, HighPop, 0.5f);
     }
     
     public float RadiusAnimationLength = 0.2f;
@@ -129,6 +177,7 @@ public class Node : MonoBehaviour
             0, RadiusAnimationLength).SetEase(Ease.OutCubic);
         Amplitude++;
         UpdateText();
+        Factory.Instance.OneShotSound(Vector3.zero, LowPop, 0.5f);
     }
 
     public void SendSignal()

@@ -31,6 +31,7 @@ public class SumSignal : MonoBehaviour
             float totalSin = 0;
             for (int n = 0; n < nodes.Length; n++)
             {
+                if (!nodes[n].Revealed) continue;
                 totalSin += nodes[n].SmoothAmplitude * Mathf.Sin(theta * nodes[n].Frequency); 
             }
 
