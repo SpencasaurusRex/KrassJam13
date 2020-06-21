@@ -6,20 +6,37 @@ public class NodeManager : MonoBehaviour
 {
     [Required]
     public Camera Camera;
-
+    
+    [Required]
+    public Transform BackgroundTransform;
+    public float SpinSpeed;
+    
     Node[] nodes;
     Connection[] connections;
+    
+    Dictionary<int, List<Node>> nodeLookup = new Dictionary<int, List<Node>>();
     
     void Start()
     {
         nodes = FindObjectsOfType<Node>();
         connections = FindObjectsOfType<Connection>();
+
+        foreach (var node in nodes)
+        {
+            if (!nodeLookup.ContainsKey(node.Frequency))
+            {
+                nodeLookup.Add(node.Frequency, new List<Node>());    
+            }
+            nodeLookup[node.Frequency].Add(node);
+        }
     }
 
     void Update()
     {
         CheckClick();
         print(CheckIfSolved());
+        
+        BackgroundTransform.rotation *= Quaternion.AngleAxis(SpinSpeed * Time.deltaTime, Vector3.forward);
     }
 
     void CheckClick()
@@ -45,11 +62,11 @@ public class NodeManager : MonoBehaviour
             {
                 if (left)
                 {
-                    node.SendAmplitude();
+                    node.RequestSendAmplitude();
                 }
                 else
                 {
-                    node.AbsorbAmplitude();
+                    node.RequestAbsorbAmplitude();
                 }
             }
         }
@@ -67,15 +84,24 @@ public class NodeManager : MonoBehaviour
             amplitudes[node.Frequency] += node.Amplitude;
         }
         
-        foreach (var amp in amplitudes.Values)
+        bool solved = true;
+        foreach (var freq in amplitudes.Keys)
         {
+            var amp = amplitudes[freq];
+            List<Node> frequencyNodes = nodeLookup[freq];
+            var ampSplit = Mathf.Abs(amp) / (float)frequencyNodes.Count;
+            foreach (var node in frequencyNodes)
+            {
+                node.SetVolume(ampSplit);
+            }
+
             if (amp != 0)
             {
-                return false;                
+                solved = false;
             }
         }
         
-        return true;
+        return solved;
         // TODO: Check if connections are currently sending something
     }
 }

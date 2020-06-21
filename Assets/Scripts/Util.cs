@@ -19,6 +19,7 @@ public static class Util
 
     public static float InverseLerpUnclamped(float a, float b, float value)
     {
+        if (Mathf.Abs(a - b) <= float.Epsilon) return 0;
         return (value - a) / (b - a);
     }
 }
