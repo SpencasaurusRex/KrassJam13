@@ -4,12 +4,15 @@ public class Signal : MonoBehaviour
 {
     public float TimePerUnit = 0.5f;
     
+    public AudioClip High;
+    public AudioClip Low;
+    
     Node startNode;
     Node endNode;
     float totalTime;
     float currentTime;
     Connection connection;
-    
+    bool high;
     public void SetEndpoints(Node startNode, Node endNode, Connection connection)
     {
         this.startNode = startNode;
@@ -30,9 +33,21 @@ public class Signal : MonoBehaviour
 
         if (currentTime >= totalTime)
         {
-            endNode.ReceiveSignal();
-            connection.RemoveSignal(this);
-            Destroy(gameObject);
+            if (endNode.TryReceiveSignal())
+            {
+                connection.RemoveSignal(this);
+                Destroy(gameObject);    
+            }
+            else
+            {
+                var end = startNode;
+                startNode = endNode;
+                endNode = end;
+                currentTime = 0;
+
+                high = !high;
+                Factory.Instance.OneShotSound(Vector3.zero, high ? High : Low, 0.5f);
+            }
         }
     }
 }

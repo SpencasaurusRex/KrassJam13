@@ -4,6 +4,8 @@ using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
 using DG.Tweening;
+using DG.Tweening.Core;
+using DG.Tweening.Plugins.Options;
 
 public class Node : MonoBehaviour
 {
@@ -32,7 +34,10 @@ public class Node : MonoBehaviour
     public Color PositiveColor;
     public Color NeutralColor;
     public Color NegativeColor;
-
+    
+    public Color MinColor;
+    public Color MaxColor;
+    
     public Color SoundWaveColor;
     
     public float StartingRadius = .8f;
@@ -41,6 +46,8 @@ public class Node : MonoBehaviour
     float targetVolume;
     List<Connection> connections = new List<Connection>();
 
+    Color discColor;
+    
     void Start()
     {
         audio = GetComponent<AudioSource>();
@@ -50,6 +57,8 @@ public class Node : MonoBehaviour
         
         Text.text = Mathf.Abs(Amplitude).ToString();
 
+        discColor = DiscBody.Color;
+        
         DiscBody.enabled = false;
         DiscRim.enabled = false;
         DiscBody.Radius = 0;
@@ -102,7 +111,9 @@ public class Node : MonoBehaviour
             float theta = i * inverseResolution * Mathf.PI * 2;
             point.x = Util.Remap(0, Mathf.PI * 2, -r, r, theta);
             float tx = Util.Remap(-r, r, 0, 1, point.x);
-            float sinOut = Mathf.Sin(Mathf.PI * tx) * SmoothAmplitude * Mathf.Sin(theta * Frequency);
+            
+            float modifier = Mathf.Sqrt(Mathf.Sin(Mathf.PI * tx)); 
+            float sinOut = modifier * SmoothAmplitude * Mathf.Sin(theta * Frequency);
             point.y = Util.Remap(-MaxAmplitude, MaxAmplitude, -r, r, sinOut);
 
             points.Add(point);
@@ -150,6 +161,11 @@ public class Node : MonoBehaviour
 
     public void RequestSendAmplitude()
     {
+        if (Amplitude - connections.Count < -4)
+        {
+            return;
+        }
+
         foreach (var con in connections)
         {
             con.Send(this);
@@ -170,23 +186,30 @@ public class Node : MonoBehaviour
     public float RadiusAnimationAmount = 0.5f;
     float radiusOffset;
     
-    public void ReceiveSignal()
+    public bool TryReceiveSignal()
     {
         radiusOffset = RadiusAnimationAmount;
         DOTween.To(() => radiusOffset, (float value) => radiusOffset = value, 
             0, RadiusAnimationLength).SetEase(Ease.OutCubic);
-        Amplitude++;
-        UpdateText();
-        Factory.Instance.OneShotSound(Vector3.zero, LowPop, 0.5f);
+        if (Amplitude < 4)
+        {
+            Amplitude++;
+            UpdateText();
+            Factory.Instance.OneShotSound(Vector3.zero, LowPop, 0.5f);    
+            return true;
+        }
+        return false;
     }
 
-    public void SendSignal()
+    public bool TrySendSignal()
     {
+        if (Amplitude == -4) return false;
         radiusOffset = -RadiusAnimationAmount;
         DOTween.To(() => radiusOffset, (float value) => radiusOffset = value, 
             0, RadiusAnimationLength).SetEase(Ease.OutCubic);
         Amplitude--;
         UpdateText();
+        return true;
     }
 
     public void UpdateText()
@@ -213,10 +236,26 @@ public class Node : MonoBehaviour
         
         fadingText.DOKill();
         fadingText.DOFade(0, 0.15f);
+
+        Color destColor = Amplitude == 4 ? MaxColor : (Amplitude - connections.Count < -4 ? MinColor : discColor);
+        discTween?.Kill();
+        discTween = DOTween.To(() => DiscBody.Color, value => DiscBody.Color = value, destColor, 0.3f);
     }
+    
+    TweenerCore<Color, Color, ColorOptions> discTween;
 
     public void SetVolume(float amplitude)
     {
-        targetVolume = Mathf.Clamp01(Mathf.Sqrt(amplitude) / 3.0f);
+        float mod = 1;
+        if (Frequency == 3)
+        {
+            mod = 0.1f;
+        }
+        else if (Frequency == 4)
+        {
+            mod = 0.5f;
+        }
+
+        targetVolume = Mathf.Clamp01(Mathf.Sqrt(amplitude) / 3.0f) * mod * 0.6f;
     }
 }

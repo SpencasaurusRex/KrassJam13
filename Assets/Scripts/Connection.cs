@@ -102,10 +102,13 @@ public class Connection : MonoBehaviour
 
     void SendSignal(Node fromNode, Node toNode, bool absorb)
     {
-        var signal = Instantiate(SignalPrefab);
-        signal.SetEndpoints(fromNode, toNode, this);
-        fromNode.SendSignal();
-        currentSignals.Add(signal);
+        if (fromNode.TrySendSignal())
+        {
+            var signal = Instantiate(SignalPrefab);
+            signal.SetEndpoints(fromNode, toNode, this);
+        
+            currentSignals.Add(signal);
+        }
     }
 
     public void RemoveSignal(Signal signal)

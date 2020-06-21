@@ -154,6 +154,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   TimePerUnit: 0.1
+  High: {fileID: 8300000, guid: 7711b763140c1cc4990f78b02a042d82, type: 3}
+  Low: {fileID: 8300000, guid: 7711b763140c1cc4990f78b02a042d82, type: 3}
 --- !u!1 &4614420374111052953
 GameObject:
   m_ObjectHideFlags: 0

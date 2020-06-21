@@ -35,7 +35,8 @@ public class SumSignal : MonoBehaviour
                 totalSin += nodes[n].SmoothAmplitude * Mathf.Sin(theta * nodes[n].Frequency); 
             }
 
-            point.y = Util.Remap(-MaxAmplitude, MaxAmplitude, -r, r, totalSin * Mathf.Sin(Mathf.PI * tx));
+            float modifier = Mathf.Sqrt(Mathf.Sin(Mathf.PI * tx)); 
+            point.y = Util.Remap(-MaxAmplitude, MaxAmplitude, -r, r, totalSin * modifier);
 
             points.Add(point);
             
