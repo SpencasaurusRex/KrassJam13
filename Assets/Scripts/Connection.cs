@@ -16,6 +16,8 @@ public class Connection : MonoBehaviour
     
     Polyline polyline;
     
+    HashSet<Signal> currentSignals = new HashSet<Signal>();
+    
     void Start()
     {
         A.AddConnection(this);
@@ -93,8 +95,19 @@ public class Connection : MonoBehaviour
     void SendSignal(Node fromNode, Node toNode, bool absorb)
     {
         var signal = Instantiate(SignalPrefab);
-        signal.SetEndpoints(fromNode, toNode);
+        signal.SetEndpoints(fromNode, toNode, this);
         fromNode.SendSignal();
+        currentSignals.Add(signal);
+    }
+
+    public void RemoveSignal(Signal signal)
+    {
+        currentSignals.Remove(signal);
+    }
+
+    public bool HasActiveSignals()
+    {
+        return currentSignals.Count > 0;
     }
 }
 

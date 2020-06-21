@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -11,10 +13,16 @@ public class NodeManager : MonoBehaviour
     public Transform BackgroundTransform;
     public float SpinSpeed;
     
+    [Required]
+    public Success SuccessAnim;
+    
     Node[] nodes;
     Connection[] connections;
     
     Dictionary<int, List<Node>> nodeLookup = new Dictionary<int, List<Node>>();
+    
+    float extraSpinSpeed;
+    float decayRate = 50;
     
     void Start()
     {
@@ -31,12 +39,29 @@ public class NodeManager : MonoBehaviour
         }
     }
 
+    bool solved;
+    
     void Update()
     {
         CheckClick();
-        print(CheckIfSolved());
         
-        BackgroundTransform.rotation *= Quaternion.AngleAxis(SpinSpeed * Time.deltaTime, Vector3.forward);
+        
+        extraSpinSpeed = Mathf.Max(0, extraSpinSpeed - Time.deltaTime * decayRate);
+        BackgroundTransform.rotation *= Quaternion.AngleAxis((SpinSpeed + extraSpinSpeed) * Time.deltaTime, Vector3.forward);
+
+        if (CheckIfSolved() && !solved)
+        {
+            solved = true;
+            StartCoroutine(Success());
+        }
+        
+    }
+
+    IEnumerator Success()
+    {
+        yield return new WaitForSeconds(0.8f);
+        extraSpinSpeed += 200;
+        SuccessAnim.Trigger();
     }
 
     void CheckClick()
@@ -46,11 +71,13 @@ public class NodeManager : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             left = true;
+            extraSpinSpeed += 50;
         }
 
         if (Input.GetMouseButtonDown(1))
         {
             right = true;
+            extraSpinSpeed += 50;
         }
 
         if (left != right)
@@ -101,7 +128,7 @@ public class NodeManager : MonoBehaviour
             }
         }
         
-        return solved;
-        // TODO: Check if connections are currently sending something
+        print(connections.FirstOrDefault(c => c.HasActiveSignals()));
+        return solved && !connections.Any(c => c.HasActiveSignals());
     }
 }

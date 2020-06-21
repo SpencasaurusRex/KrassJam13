@@ -4,15 +4,18 @@ public class Signal : MonoBehaviour
 {
     public float TimePerUnit = 0.5f;
     
-    Node StartNode;
-    Node EndNode;
+    Node startNode;
+    Node endNode;
     float totalTime;
     float currentTime;
+    Connection connection;
     
-    public void SetEndpoints(Node startNode, Node endNode)
+    public void SetEndpoints(Node startNode, Node endNode, Connection connection)
     {
-        StartNode = startNode;
-        EndNode = endNode;
+        this.startNode = startNode;
+        this.endNode = endNode;
+        this.connection = connection;
+        
         var distance = (endNode.transform.position - startNode.transform.position).magnitude;
         totalTime = distance * TimePerUnit;
         
@@ -22,12 +25,13 @@ public class Signal : MonoBehaviour
     void Update()
     {
         currentTime += Time.deltaTime;
-        transform.position = Vector3.Lerp(StartNode.transform.position, EndNode.transform.position,
+        transform.position = Vector3.Lerp(startNode.transform.position, endNode.transform.position,
             currentTime / totalTime);
 
         if (currentTime >= totalTime)
         {
-            EndNode.ReceiveSignal();
+            endNode.ReceiveSignal();
+            connection.RemoveSignal(this);
             Destroy(gameObject);
         }
     }
